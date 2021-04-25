@@ -241,3 +241,53 @@ def filtro_desuabizado():
     cv.waitKey(0)
     cv.destroyAllWindows()
 
+def leer_imagen():
+    img = cv.imread('assets/img.png', 0)
+    cv.imshow('5 segundos Cats', img)
+    img_color = cv.imread('assets/img.png')
+    cv.imshow('5 segundos color', img_color)
+    cv.waitKey(5000)
+    cv.destroyAllWindows()
+
+def guardar_imagen():
+    import os
+
+    directory = os.getcwd()
+    print("selecconar un directorio de destino")
+
+    img = cv.imread('assets/img.png')
+    img_edge = cv.Canny(img, 150, 175)
+    cv.imshow('Canny', img_edge)
+
+    print("python se mureve a la ruta para guardar")
+    os.chdir(directory)
+    print("Before saving image:")
+    print(os.listdir(directory))
+
+    cv.imwrite('savedImage.jpg', img_edge)
+
+    print("After saving image:")
+    print(os.listdir(directory))
+
+    print('Successfully saved')
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+def cruze_de_imagen():
+    image1 = cv.imread('assets/img_1.png ')
+    image2 = cv.imread('assets/img.png')
+    image1 = cv.resize(image1, (640, 480), interpolation=cv.INTER_CUBIC)
+    image2 = cv.resize(image2, (640, 480), interpolation=cv.INTER_CUBIC)
+
+    weightedSum = cv.addWeighted(image1, 0.5, image2, 0.4, 0)
+    cv.imshow('fucion Image', weightedSum)
+
+    sub = cv.subtract(image1, image2)
+    cv.imshow('Subtracted Image', sub)
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+
+
