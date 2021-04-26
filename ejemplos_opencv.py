@@ -67,13 +67,30 @@ def histograma():
     plt.ylabel('# of pixels')
     colors = ('b', 'g', 'r')
 
-    blank = np.zeros(img.shape[:2], dtype='uint8')
-    mask = cv.rectangle(blank, (0,0),(640, 428), 255, -1)
+    #blank = np.zeros(img.shape[:2], dtype='uint8')
+    #mask = cv.rectangle(blank, (0,0),(640, 428), 255, -1)
 
-    for i, col in enumerate(colors):
-        hist = cv.calcHist([img], [i], mask , [256], [0, 256])
-        plt.plot(hist, color=col)
-        plt.xlim([0, 256])
+
+    # for i, col in enumerate(colors):
+    #     hist = cv.calcHist([img], [i], mask , [256], [0, 256])
+    #     plt.plot(hist, color=col)
+    #     plt.xlim([0, 256])
+
+    hist = cv.calcHist([img], [0], None, [256], [0, 256])
+    plt.plot(hist, color='b')
+    plt.xlim([0, 256])
+
+    hist = cv.calcHist([img], [1], None, [256], [0, 256])
+    plt.plot(hist, color='g')
+    plt.xlim([0, 256])
+
+    hist = cv.calcHist([img], [2], None, [256], [0, 256])
+    plt.plot(hist, color='r')
+    plt.xlim([0, 256])
+
+    print("suma de todos los colores")
+    plt.hist(img.ravel(), 256, [0, 256])
+    plt.show()
 
     blank = np.zeros(img.shape[:2], dtype='uint8')
     b, g, r = cv.split(img)
@@ -82,27 +99,42 @@ def histograma():
     green = cv.merge([blank, g, blank])
     red = cv.merge([blank, blank, r])
 
-    cv.imshow('Blue', blue)
-    cv.imshow('Green', green)
-    cv.imshow('Red', red)
+    #cv.imshow('Blue', blue)
+    #cv.imshow('Green', green)
+    #cv.imshow('Red', red)
 
     plt.show()
 
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-def monocromatismo():
+def monocromatismo_y_somras():
+
+    par1, par2 = 175, 255
+
     img = cv.imread('assets/img_1.png')
     cv.imshow('Cats', img)
     img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    threshow, thres = cv.threshold(img, 100, 255, cv.THRESH_BINARY)
+    threshow, thres = cv.threshold(img,par1, par2, cv.THRESH_BINARY)
     cv.imshow('corte monocromatico', thres)
-    threshow, thres = cv.threshold(img, 100, 255, cv.THRESH_BINARY_INV)
+    threshow, thres = cv.threshold(img, par1, par2, cv.THRESH_BINARY_INV)
     cv.imshow('corte monocromatico inverso', thres)
-    adaptative_thres = cv.adaptiveThreshold(img, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 11, 3)
+
+    ret, thresh1 = cv.threshold(img, par1, par2, cv.THRESH_TRUNC)
+    cv.imshow('contraste raro', thresh1)
+    ret, thresh2 = cv.threshold(img, par1, par2, cv.THRESH_TOZERO)
+    cv.imshow('quitar negros', thresh2)
+    ret, thresh3 = cv.threshold(img, par1, par2, cv.THRESH_TOZERO_INV)
+    cv.imshow('quitar blancos', thresh3)
+
+    adaptative_thres = cv.adaptiveThreshold(img, par1, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 11, 3)
     cv.imshow('corte monocromatico adaptativo', adaptative_thres)
-    adaptative_gaus = cv.adaptiveThreshold(img, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 11, 3)
+    adaptative_gaus = cv.adaptiveThreshold(img, par1, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 11, 3)
     cv.imshow('corte monocromatico gause', adaptative_gaus)
+
+    ret, thresh_o = cv.threshold(img, par1, par2, cv.THRESH_OTSU)
+    cv.imshow('dividir fondo y objetos', thresh_o)
+
     cv.waitKey(0)
     cv.destroyAllWindows()
 
@@ -150,7 +182,7 @@ def matris_simple_2():
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-def reducir_bordes():
+def quitar_ruido_suabizar_y_ver_bordes():
     img = cv.imread('assets/img_1.png')  #
     #img = rescale_img(img, 0.5)
     #cv.imshow('original', img)
@@ -162,8 +194,13 @@ def reducir_bordes():
     #img = cv.blur(img, (5, 5))
     #img = cv.medianBlur(img, 3)#suabisar similares y matrcar bordes
     #img = cv.dilate(img, (7, 7), iterations=5)
-    img = cv.erode(img, (7, 7), iterations=3)
-    cv.imshow('imagen borrosa', img)
+    #img = cv.erode(img, (7, 7), iterations=3)
+
+    bilateral = cv.bilateralFilter(img, 15, 75, 75)
+    cv.imshow('imagen con color osfet', bilateral)
+
+    img = cv.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 15)
+    cv.imshow('imagen suabizada', img)
 
     cv.imshow('canny bordes principales', cv.Canny(img, 200,255))
     cv.imshow('canny todos bordes', cv.Canny(img, 0, 50))
@@ -183,11 +220,10 @@ def transformaciones():
         dimensions = (img.shape[1], img.shape[0])
         return cv.warpAffine(img, transMat, dimensions)
 
-    def rotate(img, angle, rotPoint=None):
+    def rotate(img, angle):
         (height, width) = img.shape[:2]
-
-        if rotPoint is None:
-            rotPoint = (width // 2, height // 2)
+        #punto de rotacion en el centro
+        rotPoint = (width // 2, height // 2)
 
         rotMat = cv.getRotationMatrix2D(rotPoint, angle, 1.0)
         dimensions = (width, height)
@@ -203,6 +239,13 @@ def transformaciones():
 
     cv.waitKey(0)
     cv.destroyAllWindows()
+
+
+    def cambiar_perspectiva():
+        #todo
+        #https://www.geeksforgeeks.org/image-registration-using-opencv-python/
+        #https: // opencv - python - tutroals.readthedocs.io / en / latest / py_tutorials / py_imgproc / py_geometric_transformations / py_geometric_transformations.html
+        pass
 
 def unir_colores():
     img = cv.imread('assets/img_1.png')
@@ -243,10 +286,15 @@ def filtro_desuabizado():
 
 def leer_imagen():
     img = cv.imread('assets/img.png', 0)
+    img_ = cv.cvtColor(img, cv.COLOR_BGR2HSV)
+
+
+
     cv.imshow('5 segundos Cats', img)
-    img_color = cv.imread('assets/img.png')
-    cv.imshow('5 segundos color', img_color)
     cv.waitKey(5000)
+    img_color = cv.imread('assets/img.png')
+    cv.imshow('10 segundos color', img_color)
+    cv.waitKey(10000)
     cv.destroyAllWindows()
 
 def guardar_imagen():
@@ -289,5 +337,383 @@ def cruze_de_imagen():
     cv.waitKey(0)
     cv.destroyAllWindows()
 
+def zoom_imagen():
+    import matplotlib.pyplot as plt
+    print("nota las dimenciones de la imagen ")
+    image = cv.imread('assets/img_1.png ')
+    image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+
+    half = cv.resize(image, (0, 0), fx=0.1, fy=0.1)
+    bigger = cv.resize(image, (1050, 1610))
+
+    stretch_near = cv.resize(image, (780, 540),
+                              interpolation=cv.INTER_NEAREST)
+
+    Titles = ["Original", "Half", "Bigger", "Interpolation Nearest"]
+    images = [image, half, bigger, stretch_near]
+    count = 4
+
+    for i in range(count):
+        plt.subplot(2, 2, i + 1)
+        plt.title(Titles[i])
+        plt.imshow(images[i])
+
+    plt.show()
+
+def dilatacion_y_contracion_de_claro_y_oscuro():
+    image = cv.imread('assets/img_1.png ')
+
+    kernel5 = np.ones((5, 5), np.uint8)
+    kernel6 = np.ones((6, 6), np.uint8)
+    kernel9 = np.ones((9, 9), np.uint8)
+
+    image5 = cv.erode(image, kernel5)
+    cv.imshow('Image erode 5', image5)
+    print("a")
+
+    image6 = cv.erode(image, kernel6, cv.BORDER_REFLECT)
+    cv.imshow('Image erode 6', image6)
+
+    image9 = cv.erode(image, kernel9, cv.BORDER_REFLECT)
+    cv.imshow('Image erode 7', image9)
+
+    img_dilation5 = cv.dilate(image, kernel5, iterations=1)
+    cv.imshow('Image dilate 5', img_dilation5)
+
+    img_dilation6 = cv.dilate(image, kernel6, iterations=1)
+    cv.imshow('Image dilate 6', img_dilation6)
+
+    img_dilation9 = cv.dilate(image, kernel9, iterations=1)
+    cv.imshow('Image dilate 9', img_dilation9)
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+def dufuminar():
+
+    image = cv.imread('assets/img_1.png ')
+    cv.imshow('Original Image', image)
+
+    Gaussian = cv.GaussianBlur(image, (7, 7), 0)
+    cv.imshow('Gaussian Blurring', Gaussian)
+
+    median = cv.medianBlur(image, 5)
+    cv.imshow('Median Blurring', median)
+
+    bilateral = cv.bilateralFilter(image, 9, 75, 75)
+    cv.imshow('Bilateral Blurring', bilateral)
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+def extender_imagen():
+    image = cv.imread('assets/img_1.png')
+    image = cv.resize(image, (340,240))
+    cv.imshow('Original Image', image)
+
+    cv.imshow('marco', cv.copyMakeBorder(image, 10, 10, 10, 10, cv.BORDER_CONSTANT))
+
+    cv.imshow('espejo', cv.copyMakeBorder(image, 100, 100, 50, 50, cv.BORDER_REFLECT))
+
+    cv.imshow('mosaico', cv.copyMakeBorder(image, 100, 100, 50, 50, cv.BORDER_WRAP))
+
+    cv.imshow('espejo DEFAULT', cv.copyMakeBorder(image, 100, 100, 50, 50, cv.BORDER_DEFAULT))
+
+    cv.imshow('expandir fondo oscuro', cv.copyMakeBorder(image, 100, 100, 50, 50, cv.BORDER_ISOLATED))
+
+    cv.imshow('correr/replicar ultimo pixel', cv.copyMakeBorder(image, 100, 100, 50, 50, cv.BORDER_REPLICATE))
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+def separar_fondo_de_objeto():
+    image = cv.imread('assets/park.jpg')
+    hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+
+    # marjen de azul HSV
+    lower_blue = np.array([60, 35, 140])
+    upper_blue = np.array([180, 255, 255])
+
+    mask = cv.inRange(hsv, lower_blue, upper_blue)
+
+    result = cv.bitwise_and(image, image, mask=mask)
+
+    cv.imshow('original', image)
+    cv.imshow('hsv', hsv)
+    cv.imshow('mascara', mask)
+    cv.imshow('result', result)
+
+    cv.waitKey(0)
+
+    cv.destroyAllWindows()
+
+def caprurar_video():
+
+    captura = cv.VideoCapture(0)
+    salida = cv.VideoWriter('videoSalida.avi', cv.VideoWriter_fourcc(*'XVID'), 20.0, (640, 480))
+    while (captura.isOpened()):
+        ret, imagen = captura.read()
+        if ret == True:
+            cv.imshow('video', imagen)
+            salida.write(imagen)
+            if cv.waitKey(1) & 0xFF == ord('s'):
+                break
+        else:
+            break
+    captura.release()
+    salida.release()
+    cv.destroyAllWindows()
+
+    #mostrar simplemente video
+
+    '''
+    captura = cv.VideoCapture(0)# intentar con 1, 2, 3
+    while (captura.isOpened()):
+        ret, imagen = captura.read()
+        if ret == True:
+            cv.imshow('video', imagen)
+            if cv.waitKey(1) & 0xFF == ord('s'):
+                break
+        else:
+            break
+    captura.release()
+    cv.destroyAllWindows()
+    '''
+
+def caprurar_fotografia():
+    # mostrar simplemente foto
+    cap = cv.VideoCapture(0)
+    leido, frame = cap.read()
+    if leido == True:
+        cv.imwrite("foto.png", frame)
+        print("Foto tomada correctamente")
+    else:
+        print("Error al acceder a la cámara")
+    cap.release()
+
+def borrar_mancha_en_imagen():
+
+    img = cv.imread('assets/park.jpg')
+    cv.imshow('Original Image', img)
+
+    blank = np.zeros(img.shape[:2], dtype='uint8')
+    mask = cv.rectangle(blank, (325,135),(340, 250), 255, -1)
+    cv.imshow('Mascara - blanco en fondo negro', mask)
+
+    dst = cv.inpaint(img, mask, 3, cv.INPAINT_NS)
+    cv.imshow('elemento borrado', dst)
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+def aclarar_oscurecer_y_contrastar():
+
+    img = cv.imread('assets/park.jpg')
+    cv.imshow('Original Image', img)
+
+    for gamma in [0.1, 0.5, 1.2, 2.2]:
+        gamma_corrected = np.array(255 * (img / 255) ** gamma, dtype='uint8')
+        #cv.imwrite('gamma_transformed' + str(gamma) + '.jpg', gamma_corrected)
+        cv.imshow('Image ' + str(gamma), gamma_corrected)
+
+    def pixelVal(pix, r1, s1, r2, s2):
+        if (0 <= pix and pix <= r1):
+            return (s1 / r1) * pix
+        elif (r1 < pix and pix <= r2):
+            return ((s2 - s1) / (r2 - r1)) * (pix - r1) + s1
+        else:
+            return ((255 - s2) / (255 - r2)) * (pix - r2) + s2
 
 
+    r1 = 70
+    s1 = 0
+    r2 = 140
+    s2 = 255
+
+    pixelVal_vec = np.vectorize(pixelVal)
+
+    contrast_stretched = pixelVal_vec(img, r1, s1, r2, s2)
+    cv.imshow('Image contrast', contrast_stretched)
+
+    #cv.imwrite('contrast_stretch.jpg', contrast_stretched)
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+def intento_de_transformacion_de_perspeectiva():
+    img = cv.imread('assets/img_1.png')
+
+    '''
+    rows, cols = img.shape
+    M = np.float32([[1, 0, 100], [0, 1, 50]])
+    dst = cv.warpAffine(img, M, (cols, rows))
+
+    cv.imshow('img', dst)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+    '''
+    '''
+    img1 = cv.cvtColor(img1_color, cv.COLOR_BGR2GRAY)
+    img2 = cv.cvtColor(img2_color, cv.COLOR_BGR2GRAY)
+    height, width = img2.shape
+
+    orb_detector = cv.ORB_create(5000)
+
+    kp1, d1 = orb_detector.detectAndCompute(img1, None)
+    kp2, d2 = orb_detector.detectAndCompute(img2, None)
+
+    matcher = cv.BFMatcher(cv.NORM_HAMMING, crossCheck=True)
+
+    matches = matcher.match(d1, d2)
+
+    matches.sort(key=lambda x: x.distance)
+
+    matches = matches[:int(len(matches) * 90)]
+    no_of_matches = len(matches)
+
+    p1 = np.zeros((no_of_matches, 2))
+    p2 = np.zeros((no_of_matches, 2))
+
+    for i in range(len(matches)):
+        p1[i, :] = kp1[matches[i].queryIdx].pt
+        p2[i, :] = kp2[matches[i].trainIdx].pt
+
+    homography, mask = cv.findHomography(p1, p2, cv.RANSAC)
+
+    print(type(homography))
+
+
+    
+    transformed_img = cv.warpPerspective(img1_color, homography, (width, height))
+
+    cv.imwrite('output.jpg', transformed_img)
+    '''
+
+def intento_de_restar_el_fondo():
+    img0 = cv.imread('assets/park.jpg')
+    img1 = cv.imread('assets/img.png')
+    img2 = cv.imread('assets/img_1.png')
+    #BackgroundSubtractorMOG
+    #BackgroundSubtractorMOG
+
+    fgmask0 = cv.createBackgroundSubtractorMOG2().apply(img0)
+    fgmask1 = cv.createBackgroundSubtractorMOG2().apply(img1)
+    fgmask2 = cv.createBackgroundSubtractorMOG2().apply(img2)
+
+    cv.imshow('macara de quitar el fondo 0', fgmask0)
+    cv.imshow('macara de quitar el fondo 1', fgmask1)
+    cv.imshow('macara de quitar el fondo 2', fgmask2)
+
+
+    averageValue0 = np.float32(img0)
+    cv.accumulateWeighted(img0, averageValue0, 2)
+    resultingFrames0 = cv.convertScaleAbs(averageValue0)
+    cv.imshow('difuminar el fondo 0', resultingFrames0)
+
+    averageValue1 = np.float32(img1)
+    cv.accumulateWeighted(img1, averageValue1, 2)
+    resultingFrames1 = cv.convertScaleAbs(averageValue1)
+    cv.imshow('difuminar el fondo 1', resultingFrames1)
+
+    averageValue2 = np.float32(img2)
+    cv.accumulateWeighted(img2, averageValue2, 2)
+    resultingFrames2 = cv.convertScaleAbs(averageValue2)
+    cv.imshow('difuminar el fondo 2', resultingFrames2)
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+def restar_el_fondo():
+
+    nivel = 3 #1-5 (o mas)
+
+    image = cv.imread('assets/img_1.png')
+    cv.imshow('original', image)
+
+    backgroundModel = np.zeros((1, 65), np.float64)
+
+    foregroundModel = np.zeros((1, 65), np.float64)
+
+    rectangle = (60, 130, 490, 428)
+
+    blank = np.zeros(image.shape[:2], dtype='uint8')
+    mask = cv.rectangle(blank, rectangle, 255, -1)
+    cv.imshow('Mascara - blanco en fondo negro', mask)
+
+    cv.grabCut(image, mask, rectangle,
+                backgroundModel, foregroundModel,
+                nivel, cv.GC_INIT_WITH_RECT)
+
+    mask2 = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
+
+    image = image * mask2[:, :, np.newaxis]
+
+    cv.imshow('recorte', image)
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+def transformaciones_de_colores():
+    image = cv.imread('assets/img.png')
+    cv.imshow('original', image)
+
+    color1 = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+    cv.imshow('COLOR_BGR2HSV', color1)
+    color2 = cv.cvtColor(image, cv.COLOR_BGR2HLS)
+    cv.imshow('COLOR_BGR2HLS', color2)
+    color3 = cv.cvtColor(image, cv.COLOR_BGR2LAB)
+    cv.imshow('COLOR_BGR2LAB', color3)
+    color6 = cv.cvtColor(image, cv.COLOR_BGR2BGRA)
+    cv.imshow('COLOR_BGR2BGRA', color6)
+    color4 = cv.cvtColor(image, cv.COLOR_BGR2HLS_FULL)
+    cv.imshow('COLOR_BGR2HLS_FULL', color4)
+    color5 = cv.cvtColor(image, cv.COLOR_BGR2HSV_FULL)
+    cv.imshow('COLOR_BGR2HSV_FULL', color5)
+    color7 = cv.cvtColor(image, cv.COLOR_BGR2Lab)
+    cv.imshow('COLOR_BGR2Lab', color7)
+    color8 = cv.cvtColor(image, cv.COLOR_BGR2LUV)
+    cv.imshow('COLOR_BGR2LUV', color8)
+    color9 = cv.cvtColor(image, cv.COLOR_BGR2Luv)
+    cv.imshow('COLOR_BGR2Luv', color9)
+    color10 = cv.cvtColor(image, cv.COLOR_BGR2RGBA)
+    cv.imshow('COLOR_BGR2RGBA', color10)
+    color11 = cv.cvtColor(image, cv.COLOR_BGR2XYZ)
+    cv.imshow('COLOR_BGR2XYZ', color11)
+    color12 = cv.cvtColor(image, cv.COLOR_BGR2YCR_CB)
+    cv.imshow('COLOR_BGR2YCR_CB', color12)
+    color13 = cv.cvtColor(image, cv.COLOR_BGR2YCrCb)
+    cv.imshow('COLOR_BGR2YCrCb', color13)
+    color14 = cv.cvtColor(image, cv.COLOR_BGR2YUV)
+    cv.imshow('COLOR_BGR2YUV', color14)
+    color15 = cv.cvtColor(image, cv.COLOR_BGR2YUV_I420)
+    cv.imshow('COLOR_BGR2YUV_I420', color15)
+    color16 = cv.cvtColor(image, cv.COLOR_BGR2YUV_IYUV)
+    cv.imshow('COLOR_BGR2YUV_IYUV', color16)
+    color17 = cv.cvtColor(image, cv.COLOR_BGR2YUV_YV12)
+    cv.imshow('COLOR_BGR2YUV_YV12', color17)
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+def gradiente_de_bordes_por_colores():
+    image = cv.imread('assets/img.png')
+    cv.imshow('original', image)
+
+    color1 = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+    cv.imshow('COLOR_BGR2HSV', color1)
+
+    blue1 = np.array([50, 10, 10])#110,50,50
+    blue2 = np.array([130, 255, 255])
+
+    mask = cv.inRange(color1, blue1, blue2)
+
+    res = cv.bitwise_and(image, image, mask=mask)
+
+    kernel = np.ones((5, 5), np.uint8)
+
+    gradient = cv.morphologyEx(mask, cv.MORPH_GRADIENT, kernel)
+
+    cv.imshow('Gradient', gradient)
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
