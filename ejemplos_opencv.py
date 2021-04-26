@@ -240,13 +240,6 @@ def transformaciones():
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-
-    def cambiar_perspectiva():
-        #todo
-        #https://www.geeksforgeeks.org/image-registration-using-opencv-python/
-        #https: // opencv - python - tutroals.readthedocs.io / en / latest / py_tutorials / py_imgproc / py_geometric_transformations / py_geometric_transformations.html
-        pass
-
 def unir_colores():
     img = cv.imread('assets/img_1.png')
     cv.imshow('Cats', img)
@@ -542,6 +535,9 @@ def aclarar_oscurecer_y_contrastar():
 
 def intento_de_transformacion_de_perspeectiva():
     img = cv.imread('assets/img_1.png')
+
+    # https://www.geeksforgeeks.org/image-registration-using-opencv-python/
+    # https: // opencv - python - tutroals.readthedocs.io / en / latest / py_tutorials / py_imgproc / py_geometric_transformations / py_geometric_transformations.html
 
     '''
     rows, cols = img.shape
