@@ -138,72 +138,84 @@ def monocromatismo_y_somras():
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-def edge():
-    img = cv.imread('assets/park.jpg')
-    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    cv.imshow('Laplacian', np.uint8(np.absolute(cv.Laplacian(img, cv.CV_64F))))
-    cv.imshow('Sobel X', cv.Sobel(img, cv.CV_64F, 1, 0))
-    cv.imshow('Sobel Y', cv.Sobel(img, cv.CV_64F, 0, 1))
-    cv.imshow('Combined Sobel Sobel X y Y', cv.bitwise_or(cv.Sobel(img, cv.CV_64F, 1, 1), cv.Sobel(img, cv.CV_64F, 0, 1)))
-    cv.imshow('Canny', cv.Canny(img, 150, 175))
-    cv.waitKey(0)
-    cv.destroyAllWindows()
-
-def matris_simple():
+def dibujo_simple():
     blank = np.zeros((200, 200, 3), dtype='uint8')
+
     print("asignar colores a una matris")
     blank[:] = 0,255,0
     #blank[:] = 255,0,0#blue
+    cv.circle(blank, (blank.shape[1] // 2, blank.shape[0] // 2), 50, (0, 255, 255),-1)
+    cv.rectangle(blank, (0, 0), (blank.shape[1] // 2, blank.shape[0] // 2), (255, 255, 0), thickness=-1)
     blank[10:40, 10:40] = 0, 0, 255
     cv.rectangle(blank,(50,10),(80,40), (0,0,255),thickness=0)#grosor interno y externo
     cv.line(blank,(10,50),(80,70), (0,0,255))
+    blank = cv.arrowedLine(blank,(100,50),(180,70),(0,0,255))
+    cv.putText(blank, 'gus', (0, 150), cv.FONT_ITALIC, 1.0, (255, 0, 0), 1)
+    angle = 30
+    startAngle = 0
+    endAngle = 360
+    blank = cv.ellipse(blank, (100,100), (30, 10), angle,
+                        startAngle, endAngle, (255, 0, 0), -1)
+    blank = cv.ellipse(blank, (150,170), (40, 10), angle,
+                        startAngle, endAngle, (255, 0, 0))
+
     cv.imshow('Green', blank)
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-def matris_simple_2():
+def dibujar_cotornos():
 
-    blank = np.zeros((500, 500, 3), dtype='uint8')
+    image = cv.imread('assets/img_7.png')
+    gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    edged = cv.Canny(gray, 30, 200)
+    contours, hierarchy = cv.findContours(edged, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)#CHAIN_APPROX_NONE
+    print(hierarchy)
+    cv.imshow('Canny Edges After Contouring 1', edged)
+    print("Number of Contours found = " + str(len(contours)))
+    cv.drawContours(image, contours, -1, (0, 255, 0), 3)
+    cv.imshow('Contours 1', image)
 
-    blank[200:300, 300:400] = 0, 0, 255
+    image = cv.imread('assets/img_6.png')
+    gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    edged = cv.Canny(gray, 30, 200)
+    contours, hierarchy = cv.findContours(edged, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)#CHAIN_APPROX_NONE
+    print(hierarchy)
+    cv.imshow('Canny Edges After Contouring 2', edged)
+    print("Number of Contours found = " + str(len(contours)))
+    cv.drawContours(image, contours, -1, (0, 255, 0), 3)
+    cv.imshow('Contours 2', image)
 
-    cv.rectangle(blank, (0, 0), (blank.shape[1] // 2, blank.shape[0] // 2), (0, 255, 0), thickness=-1)
-    cv.rectangle(blank, (30, 30), (60, 60), (0, 0, 255), thickness=0)  # grosor interno y externo
-    cv.imshow('Rectangle', blank)
 
-    cv.circle(blank, (blank.shape[1] // 2, blank.shape[0] // 2), 50, (0, 0, 255), thickness=-1)
-    cv.imshow('Circle', blank)
+    image = cv.imread('assets/img_5.png')
+    gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    edged = cv.Canny(gray, 30, 200)
+    contours, hierarchy = cv.findContours(edged, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)#CHAIN_APPROX_NONE
+    print(hierarchy)
+    cv.imshow('Canny Edges After Contouring 3', edged)
+    print("Number of Contours found = " + str(len(contours)))
+    cv.drawContours(image, contours, -1, (0, 255, 0), 3)
+    cv.imshow('Contours 3', image)
 
-    cv.line(blank, (100, 250), (300, 400), (255, 255, 255), thickness=3)
-    cv.imshow('Line', blank)
-
-    cv.putText(blank, 'gus', (0, 100), cv.FONT_ITALIC, 1.0, (255, 0, 0), 1)
-    cv.imshow('Text', blank)
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-def quitar_ruido_suabizar_y_ver_bordes():
-    img = cv.imread('assets/img_1.png')  #
-    #img = rescale_img(img, 0.5)
-    #cv.imshow('original', img)
-    print("ajustar a color o gris")
-    #img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    #img = cv.cvtColor(img, cv.COLOR_BGR2RGB) #color orden RGB
-    print("atenuar bordes haciendo borroso")
-    #img = cv.GaussianBlur(img, (5, 5), cv.BORDER_DEFAULT) #suabisador de bordes
-    #img = cv.blur(img, (5, 5))
-    #img = cv.medianBlur(img, 3)#suabisar similares y matrcar bordes
-    #img = cv.dilate(img, (7, 7), iterations=5)
-    #img = cv.erode(img, (7, 7), iterations=3)
+def dibujar_triangulo():
 
-    bilateral = cv.bilateralFilter(img, 15, 75, 75)
-    cv.imshow('imagen con color osfet', bilateral)
+    image = cv.imread('assets/img_5.png')
 
-    img = cv.fastNlMeansDenoisingColored(img, None, 10, 10, 7, 15)
-    cv.imshow('imagen suabizada', img)
+    p1 = (180, 90)
+    p2 = (120, 130)
+    p3 = (110, 80)
 
-    cv.imshow('canny bordes principales', cv.Canny(img, 200,255))
-    cv.imshow('canny todos bordes', cv.Canny(img, 0, 50))
+    cv.line(image, p1, p2, (255, 0, 0), 3)
+    cv.line(image, p2, p3, (255, 0, 0), 3)
+    cv.line(image, p1, p3, (255, 0, 0), 3)
+
+    centroid = ((p1[0] + p2[0] + p3[0]) // 3, (p1[1] + p2[1] + p3[1]) // 3)
+
+    cv.circle(image, centroid, 4, (0, 0, 255))
+
+    cv.imshow("image", image)
     cv.waitKey(0)
     cv.destroyAllWindows()
 
@@ -443,6 +455,7 @@ def separar_fondo_de_objeto():
 def caprurar_video():
 
     captura = cv.VideoCapture(0)
+    #video = cv.VideoWriter(video.avi, 0, 1, (width, height))   (* 'MJPG')
     salida = cv.VideoWriter('videoSalida.avi', cv.VideoWriter_fourcc(*'XVID'), 20.0, (640, 480))
     while (captura.isOpened()):
         ret, imagen = captura.read()
@@ -691,25 +704,37 @@ def transformaciones_de_colores():
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-def gradiente_de_bordes_por_colores():
-    image = cv.imread('assets/img.png')
-    cv.imshow('original', image)
+def click_en_imagen():
 
-    color1 = cv.cvtColor(image, cv.COLOR_BGR2HSV)
-    cv.imshow('COLOR_BGR2HSV', color1)
+    def click_event(event, x, y, flags, params):
 
-    blue1 = np.array([50, 10, 10])#110,50,50
-    blue2 = np.array([130, 255, 255])
+        if event == cv.EVENT_LBUTTONDOWN:
+            print(x, ' - ', y, flags, params)
 
-    mask = cv.inRange(color1, blue1, blue2)
+            font = cv.FONT_ITALIC
+            cv.putText(img, str(x) + ',' +
+                        str(y), (x, y), font,
+                        1, (255, 0, 0), 1)
+            cv.imshow('image', img)
 
-    res = cv.bitwise_and(image, image, mask=mask)
+        if event == cv.EVENT_RBUTTONDOWN:
+            print(x, ' - ', y)
 
-    kernel = np.ones((5, 5), np.uint8)
+            font = cv.FONT_ITALIC
+            b = img[y, x, 0]
+            g = img[y, x, 1]
+            r = img[y, x, 2]
+            color = "rgb: " + str(b) + ',' + str(g) + ',' + str(r)
+            print(color)
+            cv.putText(img, color, (x, y), font, 1, (255, 0, 0), 1)
+            cv.imshow('image', img)
 
-    gradient = cv.morphologyEx(mask, cv.MORPH_GRADIENT, kernel)
+    img = cv.imread('assets/img_6.png', 1)
 
-    cv.imshow('Gradient', gradient)
+    cv.imshow('image', img)
+
+    cv.setMouseCallback('image', click_event)
 
     cv.waitKey(0)
+
     cv.destroyAllWindows()
