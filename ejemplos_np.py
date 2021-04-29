@@ -237,6 +237,26 @@ def orden_de_array():
     print("ordena/reorganiza linealmente : \n", np.sort(desorden, axis=None))
     print("countador de no zeros : ", np.count_nonzero([[0, 1, 7, 0, 4], [3, 0, 0, 2, 19]]))
 
+def comparar_arrays():
+    a1 = np.array([1, 2, 4, 6, 7])
+    a2 = np.array([1, 3, 4, 5, 7])
+    a3 = np.array([1, 3, 4.00001, 5, 7])
+
+    print("-")
+    print(np.array_equal(a1, a1))
+    print(np.array_equal(a1, a2))
+    print("-")
+
+    print(np.allclose(a1, a2))
+    print(np.allclose(a3, a2))
+    print("-")
+
+    print(np.array_equiv(a1, a2))
+    print(np.array_equiv(a3, a2))
+    print("-")
+
+    print((a1 == a2).all())
+    print((a3 == a2).all())
 
 #caracteristicas_del_array()
 #actualizar_valores()

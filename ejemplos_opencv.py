@@ -3,8 +3,20 @@ import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy as np
 
+def recortar_un_segmento():
 
-def cruzado_compuertas_logicas():
+    img = cv.imread('assets/img_1.png')
+    cv.imshow('Cats', img)
+    ax = 100
+    ay = 100
+    bx = 200
+    by = 200
+    print(ax, ay, bx, by)
+    sug_img = img[ay:by, ax:bx]
+    cv.imshow('sug_img', sug_img)
+
+
+def compuertas_logicas():
     blank = np.zeros((200, 200), dtype='uint8')
 
     rectangle = cv.rectangle(blank.copy(), (15, 15), (185, 185), 255, -1)
@@ -138,6 +150,17 @@ def monocromatismo_y_somras():
     cv.waitKey(0)
     cv.destroyAllWindows()
 
+def monocromatismo_edge():
+    img = cv.imread('assets/park.jpg')
+    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    cv.imshow('Laplacian', np.uint8(np.absolute(cv.Laplacian(img, cv.CV_64F))))
+    cv.imshow('Sobel X', cv.Sobel(img, cv.CV_64F, 1, 0))
+    cv.imshow('Sobel Y', cv.Sobel(img, cv.CV_64F, 0, 1))
+    cv.imshow('Combined Sobel Sobel X y Y', cv.bitwise_or(cv.Sobel(img, cv.CV_64F, 1, 1), cv.Sobel(img, cv.CV_64F, 0, 1)))
+    cv.imshow('Canny', cv.Canny(img, 150, 175))
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
 def dibujo_simple():
     blank = np.zeros((200, 200, 3), dtype='uint8')
 
@@ -252,6 +275,46 @@ def transformaciones():
     cv.waitKey(0)
     cv.destroyAllWindows()
 
+def rotacion_sin_cortes():
+
+    image = cv.imread('assets/img_5.png')
+    '''
+    for angle in np.arange(0, 360, 15):
+        rotated = imutils.rotate(image, angle)
+        cv.imshow("Rotated (Problematic)", rotated)
+        cv.waitKey(0)
+    '''
+
+    def rotate_bound(image, angle):
+        # grab the dimensions of the image and then determine the
+        # center
+        (h, w) = image.shape[:2]
+        (cX, cY) = (w // 2, h // 2)
+        # grab the rotation matrix (applying the negative of the
+        # angle to rotate clockwise), then grab the sine and cosine
+        # (i.e., the rotation components of the matrix)
+        M = cv.getRotationMatrix2D((cX, cY), -angle, 1.0)
+        cos = np.abs(M[0, 0])
+        sin = np.abs(M[0, 1])
+        # compute the new bounding dimensions of the image
+        nW = int((h * sin) + (w * cos))
+        nH = int((h * cos) + (w * sin))
+        # adjust the rotation matrix to take into account translation
+        M[0, 2] += (nW / 2) - cX
+        M[1, 2] += (nH / 2) - cY
+        # perform the actual rotation and return the image
+        return cv.warpAffine(image, M, (nW, nH))
+
+    for angle in np.arange(0, 360, 15):
+        rotated = rotate_bound(image, angle)
+        cv.imshow("Rotated (Correct)", rotated)
+        cv.waitKey(0)
+
+
+    cv.imshow("image", image)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
 def unir_colores():
     img = cv.imread('assets/img_1.png')
     cv.imshow('Cats', img)
@@ -327,7 +390,8 @@ def guardar_imagen():
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-def cruze_de_imagen():
+def suma_y_resta_de_imagen():
+
     image1 = cv.imread('assets/img_1.png ')
     image2 = cv.imread('assets/img.png')
     image1 = cv.resize(image1, (640, 480), interpolation=cv.INTER_CUBIC)
@@ -738,3 +802,21 @@ def click_en_imagen():
     cv.waitKey(0)
 
     cv.destroyAllWindows()
+
+def ejecutable_desde_consola_y_argumentos_al_script():
+
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("-i", "--image", required=True, help="Path to the input image")
+    ap.add_argument("-m", "--method", required=True, help="Sorting method")
+    args = vars(ap.parse_args())
+
+    image = cv.imread(args["image"])
+    cv.imshow('original', image)
+
+    print(args["method"])
+
+    '''
+    $ python name_script.py --image images/image.png --method "right-to-left"
+    '''

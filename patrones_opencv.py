@@ -2,6 +2,9 @@
 import cv2 as cv
 import matplotlib.pyplot as plt
 import numpy as np
+import imutils
+from imutils import contours
+
 
 def seleccion_de_formas_por_dilatacion_y_contraccion():
     img = cv.imread('assets/img_1.png')
@@ -21,7 +24,11 @@ def seleccion_de_formas_por_dilatacion_y_contraccion():
     kernel = np.ones((3, 3), np.uint8)
     closing = cv.morphologyEx(thresh, cv.MORPH_CLOSE, kernel, iterations=2)
 
+    #dilatado = cv.dilate(thres.copy(), None, iterations=1)
+    #dilatado = cv.erode(thres.copy(), None, iterations=1)
+
     bg = cv.dilate(closing, kernel, iterations=1)
+
     cv.imshow('image dilatada invertida', bg)
 
     dist_transform = cv.distanceTransform(closing, cv.DIST_L2, 0)
@@ -83,6 +90,7 @@ def quitar_ruido_suabizar_y_ver_bordes():
     #img = cv.GaussianBlur(img, (5, 5), cv.BORDER_DEFAULT) #suabisador de bordes
     #img = cv.blur(img, (5, 5))
     #img = cv.medianBlur(img, 3)#suabisar similares y matrcar bordes
+    #dilatado = cv.dilate(thres.copy(), None, iterations=1)
     #img = cv.dilate(img, (7, 7), iterations=5)
     #img = cv.erode(img, (7, 7), iterations=3)
 
@@ -94,17 +102,6 @@ def quitar_ruido_suabizar_y_ver_bordes():
 
     cv.imshow('canny bordes principales', cv.Canny(img, 200,255))
     cv.imshow('canny todos bordes', cv.Canny(img, 0, 50))
-    cv.waitKey(0)
-    cv.destroyAllWindows()
-
-def edge():
-    img = cv.imread('assets/park.jpg')
-    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-    cv.imshow('Laplacian', np.uint8(np.absolute(cv.Laplacian(img, cv.CV_64F))))
-    cv.imshow('Sobel X', cv.Sobel(img, cv.CV_64F, 1, 0))
-    cv.imshow('Sobel Y', cv.Sobel(img, cv.CV_64F, 0, 1))
-    cv.imshow('Combined Sobel Sobel X y Y', cv.bitwise_or(cv.Sobel(img, cv.CV_64F, 1, 1), cv.Sobel(img, cv.CV_64F, 0, 1)))
-    cv.imshow('Canny', cv.Canny(img, 150, 175))
     cv.waitKey(0)
     cv.destroyAllWindows()
 
@@ -126,6 +123,7 @@ def detectar_lineas():
     kernel = np.ones((2, 2), np.uint8)
     closing = cv.morphologyEx(thresh, cv.MORPH_CLOSE, kernel, iterations=2)
 
+    #dilatado = cv.dilate(thres.copy(), None, iterations=1)
     bg = cv.dilate(closing, kernel, iterations=1)
     cv.imshow('bg', bg)
 
@@ -138,38 +136,6 @@ def detectar_lineas():
             cv.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
     cv.imshow('img', img)
-
-    cv.waitKey(0)
-    cv.destroyAllWindows()
-
-def reconocimiento_numero_de_objetos():
-    # Cargamos la imagen
-    original = cv.imread("assets/img_4.png")
-    cv.imshow("original", original)
-
-    # Convertimos a escala de grises
-    gris = cv.cvtColor(original, cv.COLOR_BGR2GRAY)
-
-    # Aplicar suavizado Gaussiano
-    gauss = cv.GaussianBlur(gris, (5, 5), 0)
-
-    cv.imshow("suavizado", gauss)
-
-    # Detectamos los bordes con Canny
-    canny = cv.Canny(gauss, 150, 250)
-
-    cv.imshow("canny", canny)
-
-    # Buscamos los contornos
-    (contornos, _) = cv.findContours(canny.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-
-    # Mostramos el número de monedas por consola
-    print("He encontrado {} objetos".format(len(contornos)))
-
-    cv.drawContours(original, contornos, -1, (0, 0, 255), 2)
-    #cv.line(original, (35, 153), (35, 153), (0, 255, 0 ))
-
-    cv.imshow("contornos", original)
 
     cv.waitKey(0)
     cv.destroyAllWindows()
@@ -256,7 +222,7 @@ def deteccion_de_esquinas_no_se_entinde():
 
     print(dest)
 
-
+    #dilatado = cv.dilate(thres.copy(), None, iterations=1)
     dest = cv.dilate(dest, None)
 
     for a in range(len(dest)):
@@ -491,3 +457,216 @@ def cordenadas_de_esquinas():
 
     cv.waitKey(0)
     cv.destroyAllWindows()
+
+def rec_de_objetos_por_threshold_y_refinamineto():
+
+
+    par1, par2 = 220, 255
+
+    img = cv.imread('assets/img_4.png')
+    #cv.imshow('img', img)
+
+
+    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    t, thres_g = cv.threshold(gray, par1, par2, cv.THRESH_BINARY)
+    cv.imshow('thres1', thres_g)
+
+    erode = cv.erode(thres_g.copy(), None, iterations=2)
+    cv.imshow('erode refinamineto', erode)
+
+    dilatado = cv.dilate(erode.copy(), None, iterations=2)
+    cv.imshow('dilatado refinamineto', dilatado)
+
+    thres_g = cv.threshold(dilatado, 225, 255, cv.THRESH_BINARY_INV)[1]
+    cv.imshow("thres2", thres_g)
+
+    mask = thres_g.copy()
+    sin_fondo = cv.bitwise_and(img, img, mask=mask)
+    cv.imshow("sin_fondo", sin_fondo)
+
+    cnts = cv.findContours(thres_g.copy(), cv.RETR_EXTERNAL,
+                           cv.CHAIN_APPROX_SIMPLE)
+    cnts = imutils.grab_contours(cnts)
+
+    output = img.copy()
+    print(len(cnts))
+
+    cv.drawContours(output, cnts, -1, (240, 0, 159), 3)
+
+    text = "I found {} objects!".format(len(cnts))
+    cv.putText(output, text, (10, 25), cv.FONT_HERSHEY_SIMPLEX, 0.5,
+                (0, 0, 0), 2)
+    cv.imshow("Contours", output)
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+def rec_de_objetos_por_canny_y_contraste():
+    # Cargamos la imagen
+    img = cv.imread("assets/img_4.png")
+    cv.imshow("original", img)
+
+    selct = 1
+
+    if selct == 1:
+        img = cv.GaussianBlur(img, (7, 7), 0)
+        img = cv.medianBlur(img, 5)
+        img = cv.medianBlur(img, 5)
+    elif selct == 2: img = cv.medianBlur(img, 5)
+    elif selct == 3: img = cv.bilateralFilter(img, 9, 75, 75)
+    cv.imshow("suavizado", img)
+
+    #                                          [0.5, 1.5, 2.0]
+    Image_gamma = np.array(255 * (img / 255) ** 2.5, dtype='uint8')
+    cv.imshow('Image_gamma', Image_gamma)
+
+    gris = cv.cvtColor(Image_gamma, cv.COLOR_BGR2GRAY)
+
+    canny = cv.Canny(gris, 200, 255)
+    cv.imshow("canny", canny)
+
+    (contornos, _) = cv.findContours(canny.copy(), cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    print("He encontrado {} objetos".format(len(contornos)))
+
+    cv.drawContours(img, contornos, -1, (0, 0, 255), 2)
+    cv.imshow("contornos", img)
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+def rec_de_objetos_por_color():
+
+    image = cv.imread("assets/img.png")
+    cv.imshow("original", image)
+
+    '''
+    image_copy = image.copy()
+    for a in range(len(image_copy)):
+        for b in range(len(image_copy[0])):
+            if np.array_equal(image_copy[a][b], np.array([255, 82, 140])):
+                image_copy[a][b] = np.array([89, 222, 255])
+    cv.imshow("pinada busqueda de color (fuerza bruta)", image_copy)
+    '''
+
+    lower = np.array([245, 70, 130])#bgr 255 82 140
+    upper = np.array([255, 90, 150])
+    shapeMask = cv.inRange(image, lower, upper)
+
+    pielb = np.full(image.shape[:2], (89), dtype='uint8')
+    pielg = np.full(image.shape[:2], (222), dtype='uint8')
+    pielr = np.full(image.shape[:2], (255), dtype='uint8')
+    # amarillo rgb(255, 222, 89)
+
+    color_amarillo = cv.merge([pielb, pielg, pielr])
+
+    mask = shapeMask.copy()
+    mascara_de_color = cv.bitwise_and(color_amarillo, color_amarillo, mask=mask)
+    cv.imshow("mascara_de_color", mascara_de_color)
+
+    for a in range(len(mascara_de_color)):
+        for b in range(len(mascara_de_color[0])):
+            for c in range(3):
+                if mascara_de_color[a][b][c] != 0:
+                    image[a][b][c] = mascara_de_color[a][b][c]
+
+    cv.imshow('pinada selectivamente con masara (fuerza bruta)', image)
+
+    cnts = cv.findContours(shapeMask.copy(), cv.RETR_EXTERNAL,
+                            cv.CHAIN_APPROX_SIMPLE)
+    cnts = imutils.grab_contours(cnts)
+    print("I found {} black shapes".format(len(cnts)))
+    #cv.imshow("Mask", shapeMask)
+    cv.drawContours(image, cnts, -1, (0, 255, 0), 2)
+
+    #cv.imshow("Image", image)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+def rec_de_objetos_por_orientaion_y_area():
+
+    image = cv.imread("assets/img_15.png")
+    cv.imshow("original", image)
+
+    gray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    gray = cv.GaussianBlur(gray, (7, 7), 0)
+
+    edged = cv.Canny(gray, 50, 100)
+    edged = cv.dilate(edged, None, iterations=1)
+    edged = cv.erode(edged, None, iterations=1)
+    cv.imshow("edged", edged)
+
+    cnts = cv.findContours(edged.copy(), cv.RETR_EXTERNAL,
+                                         cv.CHAIN_APPROX_SIMPLE)
+    cnts = imutils.grab_contours(cnts)
+    #oden de derecha a isquierda
+    (cnts, _) = contours.sort_contours(cnts)
+
+    for (i, c) in enumerate(cnts):
+        if cv.contourArea(c) < 100:
+            continue
+
+        box = cv.minAreaRect(c)
+        box = cv.boxPoints(box)
+        box = np.array(box, dtype="int")
+        cv.drawContours(image, [box], -1, (0, 255, 0), 2)
+
+        print("Object #{}:".format(i + 1))
+        print(box.astype("int"))
+        #print(box)
+        print("")
+
+        colors = ((0, 0, 255), (255, 0, 255), (0, 255, 255), (255, 0, 0))
+
+        for ((x, y), color) in zip(box, colors):
+            cv.circle(image, (int(x), int(y)), 5, color, -1)
+
+        cv.putText(image, "#{}".format(i + 1),
+                    (int(box[0][0] - 15), int(box[0][1] - 15)),
+                    cv.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 2)
+
+        cv.imshow("Image", image)
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+def rec_de_objeto_mas_grande_y_cordenadas_de_exremos():
+    image = cv.imread("assets/img_16.png")
+    #cv.imshow("original", image)
+    gris = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    gris = cv.GaussianBlur(gris, (7, 7), 0)
+
+    thresh = cv.threshold(gris, 45, 255, cv.THRESH_BINARY)[1]
+    thresh = cv.erode(thresh, None, iterations=2)
+    thresh = cv.dilate(thresh, None, iterations=2)
+    #cv.imshow("thresh", thresh)
+
+
+    cnts = cv.findContours(thresh.copy(), cv.RETR_EXTERNAL,
+                            cv.CHAIN_APPROX_SIMPLE)
+    cnts = imutils.grab_contours(cnts)
+
+    #seleionar objeto mas grande
+    c = max(cnts, key=cv.contourArea)
+    print(cv.moments(c))
+
+    #cordenadas de exremos carttecianos
+    extLeft = tuple(c[c[:, :, 0].argmin()][0])
+    extRight = tuple(c[c[:, :, 0].argmax()][0])
+    extTop = tuple(c[c[:, :, 1].argmin()][0])
+    extBot = tuple(c[c[:, :, 1].argmax()][0])
+
+    cv.drawContours(image, [c], -1, (0, 255, 255), 2)
+    #cv.imshow("drawContours", image)
+
+    cv.circle(image, extLeft, 8, (0, 0, 255), -1)
+    cv.circle(image, extRight, 8, (0, 255, 0), -1)
+    cv.circle(image, extTop, 8, (255, 0, 0), -1)
+    cv.circle(image, extBot, 8, (255, 255, 0), -1)
+
+    cv.imshow("Image", image)
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+#c = max(cnts, key=cv.isContourConvex)
+#https://docs.opencv.org/master/dd/d49/tutorial_py_contour_features.html
