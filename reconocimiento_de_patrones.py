@@ -20,6 +20,7 @@ def seleccion_de_formas_por_dilatacion_y_contraccion():
                                 cv.THRESH_BINARY_INV +
                                 cv.THRESH_OTSU)
     cv.imshow('image thresh invertida', thresh)
+    #                               THRESH_TOZERO_INV THRESH_TOZERO
 
     kernel = np.ones((3, 3), np.uint8)
     closing = cv.morphologyEx(thresh, cv.MORPH_CLOSE, kernel, iterations=2)
@@ -40,6 +41,7 @@ def seleccion_de_formas_por_dilatacion_y_contraccion():
 
     ret, thresh = cv.threshold(gray, 0, 255,
                                 cv.THRESH_OTSU)
+    #                           THRESH_TOZERO_INV THRESH_TOZERO
     cv.imshow('image thresh', thresh)
 
     kernel = np.ones((3, 3), np.uint8)
@@ -79,6 +81,30 @@ def gradiente_de_bordes_por_colores():
     cv.waitKey(0)
     cv.destroyAllWindows()
 
+def recorte_de_colores_con_mascara_muldtiple():
+    # https://www.peko-step.com/es/tool/hsvrgb.html
+    marjen1, color1 = 5, 5  # rojo
+    marjen2, color2 = 5, 125  # morado
+    # marjen, color = 3, 50 #verde pistache
+    # marjen, color = 3, 25 #amarillo
+    # marjen, color = 3, 15 #naranja
+    image = cv.imread('assets/img.png ')
+    redBajo1 = np.array([marjen1 - marjen1, 100, 20], np.uint8)
+    redAlto1 = np.array([marjen1 + marjen1, 255, 255], np.uint8)
+    redBajo2 = np.array([color2 - marjen2, 0, 0], np.uint8)
+    redAlto2 = np.array([color2 + marjen2, 255, 255], np.uint8)
+    frameHSV = cv.cvtColor(image, cv.COLOR_BGR2HSV)
+    # maskRed1 = cv.inRange(frameHSV, redBajo1, redAlto1)
+    maskRed2 = cv.inRange(frameHSV, redBajo2, redAlto2)
+    # maskRed = cv.add(maskRed1, maskRed2)
+    maskRedvis = cv.bitwise_and(image, image, mask=maskRed2)
+    # cv.imshow('frame', image)
+    cv.imshow("frameHSV", frameHSV)
+    # cv.imshow('maskRed', maskRed2)
+    cv.imshow('maskRedvis', maskRedvis)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
 def quitar_ruido_suabizar_y_ver_bordes():
     img = cv.imread('assets/img_1.png')  #
     #img = rescale_img(img, 0.5)
@@ -105,37 +131,21 @@ def quitar_ruido_suabizar_y_ver_bordes():
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-def detectar_lineas():
-
-    img = cv.imread('assets/img_6.png')
-    #dimensions = (int(img.shape[1] * 0.5), int(img.shape[0] * 0.5))
-    #img = cv.resize(img, dimensions, interpolation=cv.INTER_AREA)
-
-    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY )
-
+def encontrar_linea():
+    tolerancia_a_discontinuidad = 10
+    minima_longuitud = 100
+    img = cv.imread(cv.samples.findFile('assets/img_6.png'))
+    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     edges = cv.Canny(gray, 50, 150, apertureSize=3)
-    cv.imshow('edges', edges)
+    cv.imshow("edges", edges)
+    lines = cv.HoughLinesP(edges, 1, np.pi / 180, 100,
+                           minLineLength=minima_longuitud,
+                           maxLineGap=tolerancia_a_discontinuidad)
 
-    ret, thresh = cv.threshold(edges, 0, 255,
-                                cv.THRESH_BINARY +
-                                cv.THRESH_OTSU)
-
-    kernel = np.ones((2, 2), np.uint8)
-    closing = cv.morphologyEx(thresh, cv.MORPH_CLOSE, kernel, iterations=2)
-
-    #dilatado = cv.dilate(thres.copy(), None, iterations=1)
-    bg = cv.dilate(closing, kernel, iterations=1)
-    cv.imshow('bg', bg)
-
-    largo_minimo = 10
-    maximo_brecha_de_linea = 100
-    lines = cv.HoughLinesP(bg, 1, np.pi / 180, 100, largo_minimo, maximo_brecha_de_linea)
-    print(lines)
-    for a in range(len(lines)):
-        for x1, y1, x2, y2 in lines[a]:
-            cv.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-
-    cv.imshow('img', img)
+    for line in lines:
+        x1, y1, x2, y2 = line[0]
+        cv.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    cv.imshow("img", img)
 
     cv.waitKey(0)
     cv.destroyAllWindows()
@@ -146,7 +156,7 @@ def detectar_circulos():
     cv.imshow("original", img)
 
     gris = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-
+    #img = cv.medianBlur(img, 5)
     gauss = cv.GaussianBlur(gris, (3, 3), 0)
 
     cv.imshow("gauss", gauss)
@@ -211,31 +221,6 @@ def deteccion_de_vertices():
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-def deteccion_de_esquinas_no_se_entinde():
-    image = cv.imread("assets/img_7.png")
-    # cv.imshow("original", img1)
-    operatedImage = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-
-    operatedImage = np.float32(operatedImage)
-
-    dest = cv.cornerHarris(operatedImage, 5, 5, 0.1)
-
-    print(dest)
-
-    #dilatado = cv.dilate(thres.copy(), None, iterations=1)
-    dest = cv.dilate(dest, None)
-
-    for a in range(len(dest)):
-        if(np.sum(dest[a])> 0.1):
-            print(dest[a])
-
-    image[dest > 0.01 * dest.max()] = [0, 0, 255]
-
-    cv.imshow('Image with Borders', image)
-
-    cv.waitKey(0)
-    cv.destroyAllWindows()
-
 def deteccion_de_esquinas():
 
     img = cv.imread("assets/img_7.png")
@@ -250,46 +235,8 @@ def deteccion_de_esquinas():
         x, y = i.ravel()
         cv.circle(img, (x, y), 3, (255, 0, 0), -1)
 
-
     cv.imshow('Image with Borders', img)
 
-    cv.waitKey(0)
-    cv.destroyAllWindows()
-
-def deteccion_de_circulos_no_se_entinde():
-
-    image = cv.imread("assets/img_9.png", 0)
-    ret, image = cv.threshold(image, 0, 255,
-                               cv.THRESH_BINARY +
-                               cv.THRESH_OTSU)
-    cv.imshow("image", image)
-
-    params = cv.SimpleBlobDetector_Params()
-
-    params.filterByArea = True       #puede desactivar los parametros que no use
-    params.minArea = 10
-    params.filterByCircularity = True
-    params.minCircularity = 0.8       #calidad del circulo 1= circulo perfecto (en la practica ninguno)
-    params.filterByConvexity = False
-    params.minConvexity = 0.5
-    params.filterByInertia = False
-    params.minInertiaRatio = 0.1
-
-    detector = cv.SimpleBlobDetector_create(params)
-    keypoints = detector.detect(image)
-    list_key = cv.KeyPoint_convert(keypoints)[1]
-    print(list_key)
-
-    blank = np.zeros((1, 1))
-    blobs = cv.drawKeypoints(image, keypoints, blank, (0, 0, 255),
-                              cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    text = "Number of Circular Blobs: " + str(len(keypoints))
-    print(text)
-    cv.putText(blobs, text, (20, 550),
-                cv.FONT_HERSHEY_SIMPLEX, 1, (0, 100, 255), 2)
-    cv.circle(blobs, (420, 634), 5, (0, 255, 0), 2)
-    cv.circle(blobs, (666, 629), 5, (0, 255, 0), 2)
-    cv.imshow("Filtering Circular Blobs Only", blobs)
     cv.waitKey(0)
     cv.destroyAllWindows()
 
@@ -351,6 +298,7 @@ def encontrar_y_borrar_puntos_pequenos():
     ret, thresh = cv.threshold(edges, 100, 255,
                                 cv.THRESH_BINARY +
                                 cv.THRESH_OTSU)
+    #                               THRESH_TOZERO_INV THRESH_TOZERO
 
     cnts = cv.findContours(thresh, cv.RETR_LIST,
                             cv.CHAIN_APPROX_SIMPLE)[-2]
@@ -377,35 +325,6 @@ def encontrar_y_borrar_puntos_pequenos():
     print(len(xcnts))
 
     cv.waitKey(0)
-    cv.destroyAllWindows()
-
-def slider_tienpo_real():# se podria hacer uno que sea manual
-
-    def hcer_algo():
-        print("hcer_algo")
-
-    image = np.zeros((512, 512, 3), np.uint8)
-    windowName = "Open CV Color Palette"
-
-    cv.namedWindow(windowName)
-
-    cv.createTrackbar('Blue', windowName, 0, 255, hcer_algo)
-    cv.createTrackbar('Green', windowName, 0, 255, hcer_algo)
-    cv.createTrackbar('Red', windowName, 0, 255, hcer_algo)
-
-    while (True):
-        cv.imshow(windowName, image)
-
-        if cv.waitKey(1) == 27:
-            break
-
-        blue = cv.getTrackbarPos('Blue', windowName)
-        green = cv.getTrackbarPos('Green', windowName)
-        red = cv.getTrackbarPos('Red', windowName)
-
-        image[:] = [blue, green, red]
-        print(blue, green, red)
-
     cv.destroyAllWindows()
 
 def cordenadas_de_esquinas():
@@ -469,6 +388,8 @@ def rec_de_objetos_por_threshold_y_refinamineto():
 
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     t, thres_g = cv.threshold(gray, par1, par2, cv.THRESH_BINARY)
+    #                               THRESH_TOZERO_INV THRESH_TOZERO
+
     cv.imshow('thres1', thres_g)
 
     erode = cv.erode(thres_g.copy(), None, iterations=2)
@@ -478,6 +399,7 @@ def rec_de_objetos_por_threshold_y_refinamineto():
     cv.imshow('dilatado refinamineto', dilatado)
 
     thres_g = cv.threshold(dilatado, 225, 255, cv.THRESH_BINARY_INV)[1]
+    #                               THRESH_TOZERO_INV THRESH_TOZERO
     cv.imshow("thres2", thres_g)
 
     mask = thres_g.copy()
@@ -636,6 +558,8 @@ def rec_de_objeto_mas_grande_y_cordenadas_de_exremos():
     gris = cv.GaussianBlur(gris, (7, 7), 0)
 
     thresh = cv.threshold(gris, 45, 255, cv.THRESH_BINARY)[1]
+    #                       THRESH_TOZERO_INV THRESH_TOZERO
+
     thresh = cv.erode(thresh, None, iterations=2)
     thresh = cv.dilate(thresh, None, iterations=2)
     #cv.imshow("thresh", thresh)
@@ -668,5 +592,262 @@ def rec_de_objeto_mas_grande_y_cordenadas_de_exremos():
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-#c = max(cnts, key=cv.isContourConvex)
-#https://docs.opencv.org/master/dd/d49/tutorial_py_contour_features.html
+def contornos_conveccos():
+
+
+    img = cv.imread('assets/img_22.png')
+    img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    ret, thresh = cv.threshold(img_gray, 100, 255, 0)
+    cv.imshow('thresh', thresh)
+
+    contours, hierarchy = cv.findContours(thresh, 2, 1)
+    cnt = contours[0]
+    hull = cv.convexHull(cnt, returnPoints=False)
+    defects = cv.convexityDefects(cnt, hull)
+    for i in range(defects.shape[0]):
+        s, e, f, d = defects[i, 0]
+        start = tuple(cnt[s][0])
+        end = tuple(cnt[e][0])
+        far = tuple(cnt[f][0])
+        cv.line(img, start, end, [0, 255, 0], 2)
+        cv.circle(img, far, 5, [0, 0, 255], -1)
+        cv.imshow('img', img)
+        cv.waitKey(0)
+
+    #cv.imshow('img', img)
+    #cv.waitKey(0)
+    cv.destroyAllWindows()
+
+def contornos_similares():
+
+    img1 = cv.imread('assets/est.png', 0)
+    img2 = cv.imread('assets/rom.png', 0)
+    ret, thresh = cv.threshold(img1, 127, 255, 0)
+    ret, thresh2 = cv.threshold(img2, 127, 255, 0)
+    cv.imshow('thresh', thresh)
+    cv.imshow('thresh2', thresh2)
+    contours, hierarchy = cv.findContours(thresh, 2, 1)
+    cnt1 = contours[0]
+    contours, hierarchy = cv.findContours(thresh2, 2, 1)
+    cnt2 = contours[0]
+    ret = cv.matchShapes(cnt1, cnt2, 1, 0.0)
+    print("0.00 significa mucha similitud")
+    print("0.1 a 1.0 significa muy diferente")
+    print(ret)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+def caracteristicas_de_los_contornos():
+       import cv2 as cv
+       path = 'assets/img_22.png'
+       img = cv.imread(path, 0)
+       img0 = cv.imread(path)
+       img1 = cv.imread(path)
+       img2 = cv.imread(path)
+       img3 = cv.imread(path)
+       img4 = cv.imread(path)
+       img5 = cv.imread(path)
+       img6 = cv.imread(path)
+       img7 = cv.imread(path)
+       ret, thresh = cv.threshold(img, 100, 255, 0)
+       #thresh = cv.Canny(thresh, 30, 200)
+       #cv.imshow("thresh", thresh)
+       contours, hierarchy = cv.findContours(thresh, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)#cv.CHAIN_APPROX_SIMPLE
+       cnt = contours[0]
+
+       print("k, contorno convexo:", cv.isContourConvex(cnt))
+       x, y, w, h = cv.boundingRect(cnt)
+       print("relación de aspecto:", float(w) / h)
+
+       leftmost = tuple(cnt[cnt[:, :, 0].argmin()][0])
+       cv.circle(img0, leftmost, 2, (0, 255, 0), 2)
+       rightmost = tuple(cnt[cnt[:, :, 0].argmax()][0])
+       cv.circle(img0, rightmost, 2, (0, 255, 0), 2)
+       topmost = tuple(cnt[cnt[:, :, 1].argmin()][0])
+       cv.circle(img0, topmost, 2, (0, 255, 0), 2)
+       bottommost = tuple(cnt[cnt[:, :, 1].argmax()][0])
+       cv.circle(img0, bottommost, 2, (0, 255, 0), 2)
+
+       M = cv.moments(cnt)
+       cx = int(M['m10'] / M['m00'])
+       cy = int(M['m01'] / M['m00'])
+       cv.circle(img0, (cx, cy), 5, (255, 255, 255), -1)
+       print("centro en cordenadas:", cx, cy)
+       print("area:", cv.contourArea(cnt))
+       print("perimeter cerrado:", cv.arcLength(cnt, True))
+       cv.imshow("centro y extremos cardinales", img0)
+
+       hull = cv.convexHull(cnt)
+       cv.drawContours(img1, hull, -1, (0, 255, 0), 3)
+       print("hull, puntos de contorno externo:", hull)
+       cv.imshow("puntos de contorno externo", img1)
+
+       epsilon = 0.035 * cv.arcLength(cnt, True)
+       print("epsilon:", epsilon)
+       approx = cv.approxPolyDP(cnt, epsilon, True)
+       cv.drawContours(img2, approx, -1, (255, 0, 0), 5)
+       print("approx, simplificacion de la forma:", approx)
+       cv.imshow("simplificacion de la forma", img2)
+
+
+       x, y, w, h = cv.boundingRect(cnt)
+       cv.rectangle(img3, (x, y), (x + w, y + h), (0, 255, 0), 2)
+       cv.imshow("area rectangular carteciana", img3)
+
+       rect = cv.minAreaRect(cnt)
+       box = cv.boxPoints(rect)
+       box = np.int0(box)
+       cv.drawContours(img4, [box], 0, (0, 0, 255), 2)
+       cv.imshow("rectangulo de minima area", img4)
+
+       (x, y), radius = cv.minEnclosingCircle(cnt)
+       center = (int(x), int(y))
+       radius = int(radius)
+       cv.circle(img5, center, radius, (0, 255, 0), 2)
+       cv.imshow("circle", img5)
+
+       ellipse = cv.fitEllipse(cnt)
+       cv.ellipse(img6, ellipse, (0, 255, 0), 2)
+       cv.imshow("ellipse", img6)
+
+
+       rows, cols = img.shape[:2]
+       [vx, vy, x, y] = cv.fitLine(cnt, cv.DIST_L2, 0, 0.01, 0.01)
+       lefty = int((-x * vy / vx) + y)
+       righty = int(((cols - x) * vy / vx) + y)
+       cv.line(img7, (cols - 1, righty), (0, lefty), (0, 255, 0), 2)
+       cv.imshow("linea reansversal", img7)
+
+       cv.waitKey(0)
+       cv.destroyAllWindows()
+
+def figuras_demaciado_cercas():
+    img = cv.imread('assets/img_23.png')
+    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    ret, thresh = cv.threshold(gray, 100, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)
+
+    kernel = np.ones((3, 3), np.uint8)
+    opening = cv.morphologyEx(thresh, cv.MORPH_OPEN, kernel, iterations=5)
+    cv.imshow("opening", opening)
+
+    dist_transform = cv.distanceTransform(opening, cv.DIST_L2, 5)
+
+    sure_bg = cv.dilate(opening, kernel, iterations=3)
+    ret, sure_fg = cv.threshold(dist_transform, 0.7 * dist_transform.max(), 255, 0)
+    sure_fg = np.uint8(sure_fg)
+    unknown = cv.subtract(sure_bg, sure_fg)
+    cv.imshow("unknown", unknown)
+
+    ret, markers = cv.connectedComponents(sure_fg)
+    markers = markers + 1
+    markers[unknown == 255] = 0
+    markers = cv.watershed(img, markers)
+    img[markers == -1] = [255, 0, 0]
+    cv.imshow("sure_fg", sure_fg)
+    cv.imshow("img", img)
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+def detexion_de_defectos_de_cavidad_contador_de_dedos():
+    color_start = (204,204,0)
+    color_end = (204,0,204)
+    color_far = (255,0,0)
+
+    color_fingers = (0,255,255)
+    color_contorno = (0, 255, 0)
+    color_ymin = (0, 130, 255)
+
+    color_start_far = (204, 204, 0)
+    color_far_end = (204, 0, 204)
+    color_start_end = (0, 255, 255)
+
+    color_angulo = (0,255,255)
+    color_d = (0,255,255)
+
+    img = cv.imread('assets/img_22.png')
+    img3 = cv.imread('assets/img_3.png')
+    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    ret, thresh = cv.threshold(gray, 100, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    cnts, _ = cv.findContours(thresh, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    cnts = sorted(cnts, key=cv.contourArea, reverse=True)[:1]
+    for cnt in cnts:
+        M = cv.moments(cnt)
+        if M["m00"] == 0: M["m00"] = 1
+        x = int(M["m10"] / M["m00"])
+        y = int(M["m01"] / M["m00"])
+        cv.circle(img, tuple([x, y]), 5, (0, 255, 0), -1)
+        # Punto más alto del contorno
+        ymin = cnt.min(axis=1)
+        cv.circle(img, tuple(ymin[0]), 5, color_ymin, -1)
+        # Contorno encontrado a través de cv.convexHull
+        hull1 = cv.convexHull(cnt)
+        cv.drawContours(img, [hull1], 0, color_contorno, 2)
+        # Defectos convexos
+        hull2 = cv.convexHull(cnt, returnPoints=False)
+        defects = cv.convexityDefects(cnt, hull2)
+
+        if defects is not None:
+            inicio = []  # Contenedor en donde se almacenarán los puntos iniciales de los defectos convexos
+            fin = []  # Contenedor en donde se almacenarán los puntos finales de los defectos convexos
+            fingers = 1  # Contador para el número de dedos levantados
+            for i in range(defects.shape[0]):
+
+                s, e, f, d = defects[i, 0]
+                start = cnt[s][0]
+                end = cnt[e][0]
+                far = cnt[f][0]
+                # Encontrar el triángulo asociado a cada defecto convexo para determinar ángulo
+                a = np.linalg.norm(far - end)
+                b = np.linalg.norm(far - start)
+                c = np.linalg.norm(start - end)
+
+                angulo = np.arccos((np.power(a, 2) + np.power(b, 2) - np.power(c, 2)) / (2 * a * b))
+                angulo = np.degrees(angulo)
+                angulo = int(angulo)
+                                                #20              90          12,000
+                if np.linalg.norm(start - end) > 30 and angulo < 100 and d > 11000:
+                    fingers = fingers + 1
+                    print(fingers)
+                    inicio.append(start)
+                    fin.append(end)
+
+                    #cv.putText(img,'{}'.format(angulo),tuple(far), 1, 1,color_angulo,2,cv.LINE_AA)
+                    #cv.putText(img,'{}'.format(d),tuple(far), 1, 1,color_d,1,cv.LINE_AA)
+                    cv.circle(img, tuple(start), 3, color_start, 2)
+                    cv.circle(img, tuple(end), 3, color_end, 2)
+                    cv.circle(img, tuple(far), 3, color_far, -1)
+                    cv.line(img,tuple(start),tuple(far),color_start_far,2)
+                    cv.line(img,tuple(far),tuple(end),color_far_end,2)
+                    cv.line(img,tuple(start),tuple(end),color_start_end,2)
+
+            cv.putText(img, str(fingers) + " dedos", (10, 20), 1, 1, (color_fingers), 2, cv.LINE_AA)
+
+    cv.imshow('th', thresh)
+    cv.imshow("img", img)
+    cv.imshow("img3", img3)
+
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+    cv.destroyAllWindows()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
