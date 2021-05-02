@@ -8,7 +8,6 @@ from procesado_de_formas import recortar_imagen_con_mascara, \
 from ejemplos_np import caracteristicas_del_array, actualizar_valores, leer_valores, matris_intermediara, \
     comparacion_de_matrices, creacion_de_matrices, crear_diagonal, algebra_de_arrays, rehacer_forma_y_extender_anadir, \
     tipos_de_datos_numericos, algebra, siclos_logicos, orden_de_array, comparar_arrays
-from graficos import modelo_numpy_3d
 from procesado_monocromatico import transformaciones_morfologicas, compuertas_logicas, monocromatismo_y_somras, \
     monocromatismo_edge, dilatacion_y_contracion_de_claro_y_oscuro, monocromatismo_erocion_vertical_horizontal, \
     quitar_sombra_binaria_inteligente_gauss
@@ -122,8 +121,6 @@ def interrelaciones():
     traking_objeto_en_video()
     cosas()
 
-def graficos():
-    modelo_numpy_3d()
 
 
 # realidad aumentada
